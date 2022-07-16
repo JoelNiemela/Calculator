@@ -22,7 +22,7 @@
 
 .display-container {
   width: 210px;
-  height: 36px;
+  min-height: 36px;
   margin: 2px 0px;
   font-size: 25px;
   border: 1px solid grey;
@@ -33,7 +33,26 @@
 .display {
   float: right;
   margin-right: 8px;
-  font-size: 25px;
+  font-size: 28px;
+  font-family: "Source Code Pro", sans-serif;
+}
+
+.caret {
+  position: relative;
+}
+
+.caret:after {
+  content: "|";
+  position: absolute;
+  left: 8px;
+  top: -3px;
+  animation: blinking 1s steps(2, start) infinite;
+}
+
+@keyframes blinking {
+  to {
+    visibility: hidden;
+  }
 }
 
 .riple {
