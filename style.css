@@ -7,28 +7,62 @@
   border-radius: 4px;
 }
 
+.btn {
+  background-color: #ebebf0;
+}
+
 .btn-primary {
   background-color: #4287f5;
   color: white;
 }
 
-.btn-primary:hover {
-  background-color: #3875d6;
-}
-
-.btn-primary:active {
-  background-color: #3167bd;
-}
-
 .btn-secondary {
-  background-color: #dedede;
+  background-color: #d2d2d5;
 }
 
-.btn-secondary:hover {
-  background-color: #bababa;
+.display-container {
+  width: 210px;
+  height: 36px;
+  margin: 2px 0px;
+  font-size: 25px;
+  border: 1px solid grey;
+  border-radius: 4px;
+  overflow: scroll;
 }
 
-.btn-secondary:active {
-  background-color: #9c9c9c;
+.display {
+  float: right;
+  margin-right: 8px;
+  font-size: 25px;
 }
 
+.riple {
+  position: relative;
+  overflow: hidden;
+}
+
+.impl-riple-effect {
+  position: absolute;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.2);
+
+  --size: 50px;
+  width: var(--size);
+  height: var(--size);
+  margin-top: calc(0px - (var(--size) / 2));
+  margin-left: calc(0px - (var(--size) / 2));
+
+  animation: ripple 1.5s;
+  opacity: 0;
+}
+
+@keyframes ripple {
+  from {
+    opacity: 1;
+    transform: scale(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(10);
+  }
+}
