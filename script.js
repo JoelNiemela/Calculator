@@ -236,7 +236,6 @@ function calculate() {
     "pi": 3.14159265359,
   };
   const value = evaluate(tree, symtable);
-  console.log(tree);
   return value;
 }
 
