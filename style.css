@@ -27,7 +27,8 @@
   font-size: 25px;
   border: 1px solid grey;
   border-radius: 4px;
-  overflow: scroll;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .display {
