@@ -340,7 +340,7 @@ function handleInput(key) {
     case '⌫':
       remove();
       break;
-    case '^':
+    case 'xʸ':
       insert({type: "super", value: []});
       caretPos.push(0);
       break;
@@ -349,10 +349,6 @@ function handleInput(key) {
       break;
     case '→':
       moveCaretForward();
-      break;
-    case '↑':
-      break;
-    case '↓':
       break;
     case '=':
       calcValue = calculate().toString().split("");
@@ -376,7 +372,7 @@ function handleKeyPress(e) {
   const key = e.key;
   if (e.ctrlKey) return;
 
-  if (key.length == 1 && key.match(/[a-zA-Z0-9()\.^+-]/i)) {
+  if (key.length == 1 && key.match(/[a-zA-Z0-9()\.:+-]/i)) {
     e.preventDefault();
     handleInput(key);
   }
@@ -384,13 +380,12 @@ function handleKeyPress(e) {
   const keyMap = {
     "*": "×",
     "/": "÷",
+    "^": "xʸ",
     "Backspace": "⌫",
     "Enter": "=",
     " ": "\xa0", // replace space with non-breaking space
     "ArrowLeft": "←",
     "ArrowRight": "→",
-    "ArrowUp": "↑",
-    "ArrowDown": "↓",
   };
 
   if (keyMap[key]) {

@@ -20,8 +20,13 @@
   background-color: #d2d2d5;
 }
 
+.btn-alt {
+  background-color: #88888a;
+  color: white;
+}
+
 .display-container {
-  width: 370px;
+  width: 424px;
   min-height: 36px;
   margin: 2px 0px;
   font-size: 25px;
