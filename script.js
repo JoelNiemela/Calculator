@@ -104,7 +104,7 @@ function tokenize(str) {
     ["div", /^\÷/],
     ["add", /^\+/],
     ["sub", /^\-/],
-    ["err", /^\./],
+    ["err", /^./],
   ];
 
   let pos = 0;
