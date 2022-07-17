@@ -1,23 +1,71 @@
 let calcValue = [];
 let caretPos = [0];
 
+function caret(value) {
+    return '<span class="caret">' + value + "</span>";
+}
+
+function caretUnder() {
+    return '<span class="caret-under">\xa0</span>';
+}
+
+function superscript(value) {
+  return "<sup>" + value + "</sup>";
+}
+
 function calcValueString(value, pos=[]) {
-    const equals = (a, b) =>
-      a.length === b.length &&
-      a.every((v, i) => v === b[i]);
+  const equals = (a, b) =>
+    a.length === b.length &&
+    a.every((v, i) => v === b[i]);
 
   if (typeof value == "string") {
     pos[pos.length-1]++;
 
-    if (equals(pos, caretPos)) return '<span class="caret">' + value + "</span>";
+    if (equals(pos, caretPos)) return caret(value);
     return value;
   }
 
   if (Array.isArray(value)) {
-    return value.map((e, i) => calcValueString(e, [...pos, i])).join("");
+    let caretPrefix = "";
+    if (equals([...pos, 0], caretPos)) {
+      if (pos.length == 0 && value.length == 0) {
+        caretPrefix = caret("\xa0");
+      } else {
+        caretPrefix = caret("");
+      }
+    }
+
+    return caretPrefix + value.map((e, i) => calcValueString(e, [...pos, i])).join("");
   }
 
-  return "<sup>" + calcValueString(value.value, pos) + "</sup>";
+  if (typeof value == "object") {
+    let caretPostfix = "";
+    pos[pos.length-1]++;
+    if (equals(pos, caretPos)) {
+      if (pos.length == 0 && value.length == 0) {
+        caretPostfix = caret("\xa0");
+      } else {
+        caretPostfix = caret("");
+      }
+    }
+    pos[pos.length-1]--;
+
+    let valueStr = calcValueString(value.value, pos);
+    if (value.type == "super") return superscript(valueStr) + caretPostfix;
+  }
+}
+
+function calcValueEquation(value) {
+  if (typeof value == "string") {
+    return value;
+  }
+
+  if (Array.isArray(value)) {
+    return value.map(e => calcValueEquation(e)).join("");
+  }
+
+  let valueStr = calcValueEquation(value.value);
+  if (value.type == "super") return "^(" + valueStr + ")"
 }
 
 function getElementOffset(element) {
@@ -45,8 +93,56 @@ function riple(e) {
   }, 2000);
 }
 
-function moveCaret() {
-  caretPos[caretPos.length-1]++;
+function getAt(pos, value=calcValue) {
+  if (typeof value == "string") {
+    return value;
+  }
+
+  if (Array.isArray(value)) {
+    const [index, ...subPos] = pos;
+    const subValue = value[index];
+    if (subPos.length) {
+      return getAt(subPos, subValue);
+    } else {
+      return subValue;
+    }
+  }
+
+  if (typeof value == "object") {
+    return getAt(pos, value.value);
+  }
+}
+
+function moveCaretForward() {
+  const element = getAt(caretPos);
+
+  if (element) {
+    if (typeof element == "string") {
+      caretPos[caretPos.length-1]++;
+    } else if (typeof element == "object") {
+      caretPos.push(0);
+    }
+  } else if (caretPos.length > 1) {
+    caretPos.pop();
+    caretPos[caretPos.length-1]++;
+  }
+}
+
+function moveCaretBackward() {
+  if (caretPos[caretPos.length-1] > 0) {
+    caretPos[caretPos.length-1]--;
+
+    const element = getAt(caretPos);
+    if (typeof element == "object") {
+      caretPos.push(element.value.length);
+    }
+
+    return;
+  }
+
+  if (caretPos.length > 1) {
+    caretPos.pop();
+  }
 }
 
 function insert(value, arr=calcValue, pos=caretPos) {
@@ -77,12 +173,24 @@ function remove(arr=calcValue, pos=caretPos) {
   }
 }
 
-function handleInput(key) {
+function update() {
   let display = document.getElementById("display");
+
+  display.innerHTML = calcValueString(calcValue);
+
+  let debug = document.getElementById("debug");
+  let pos = document.getElementById("pos");
+
+  if (debug) debug.innerHTML = calcValueEquation(calcValue);
+  if (pos) pos.innerHTML = caretPos.join();
+}
+
+function handleInput(key) {
 
   switch (key) {
     case 'AC':
       calcValue = [];
+      caretPos = [0];
       break;
     case '⌫':
       remove();
@@ -91,15 +199,25 @@ function handleInput(key) {
       insert({type: "super", value: []});
       caretPos.push(0);
       break;
+    case '←':
+      moveCaretBackward();
+      break;
+    case '→':
+      moveCaretForward();
+      break;
+    case '↑':
+      break;
+    case '↓':
+      break;
     case '=':
       break;
     default:
       insert(key);
-      moveCaret();
+      moveCaretForward();
       break;
   }
 
-  display.innerHTML = calcValueString(calcValue);
+  update();
 }
 
 function handleButtonClick(e) {
@@ -111,7 +229,7 @@ function handleKeyPress(e) {
   const key = e.key;
   if (e.ctrlKey) return;
 
-  if (key.length == 1 && key.match(/[a-zA-Z0-9()\.\s^+-]/i)) {
+  if (key.length == 1 && key.match(/[a-zA-Z0-9()\.^+-]/i)) {
     e.preventDefault();
     handleInput(key);
   }
@@ -120,11 +238,16 @@ function handleKeyPress(e) {
     "*": "×",
     "/": "÷",
     "Backspace": "⌫",
-  }
+    " ": "\xa0", // replace space with non-breaking space
+    "ArrowLeft": "←",
+    "ArrowRight": "→",
+    "ArrowUp": "↑",
+    "ArrowDown": "↓",
+  };
 
   if (keyMap[key]) {
     e.preventDefault();
-    handleInput(keyMap[key])
+    handleInput(keyMap[key]);
   }
 }
 
@@ -134,4 +257,6 @@ for (const btn of btns) {
   btn.addEventListener('mousedown', riple);
 }
 
-document.addEventListener('keydown', handleKeyPress)
+document.addEventListener('keydown', handleKeyPress);
+
+update();

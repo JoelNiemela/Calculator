@@ -37,16 +37,27 @@
   font-family: "Source Code Pro", sans-serif;
 }
 
-.caret {
+.caret,
+.caret-under {
   position: relative;
+}
+
+.caret:after,
+.caret-under:after {
+  position: absolute;
+  animation: blinking 1s steps(2, start) infinite;
 }
 
 .caret:after {
   content: "|";
-  position: absolute;
-  left: 8px;
+  right: -8px;
   top: -3px;
-  animation: blinking 1s steps(2, start) infinite;
+}
+
+.caret-under:after {
+  content: "_";
+  right: 0px;
+  top: -3px;
 }
 
 @keyframes blinking {
