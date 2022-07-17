@@ -116,6 +116,7 @@ function tokenize(str) {
       if (token = str.slice(pos).match(regex)) {
         pos += token[0].length;
         tokens.push({type, value: token[0]});
+        break;
       }
     }
   }
@@ -157,6 +158,10 @@ function parse(tokens, prec=10) {
   };
 
   const lexp = parse(tokens, prec-1);
+
+  if (tokens.length == 0) {
+    return lexp;
+  }
 
   const token = tokens.shift();
   if (ops[prec].includes(token?.type)) {
