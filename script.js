@@ -386,6 +386,7 @@ function handleKeyPress(e) {
     "*": "×",
     "/": "÷",
     "Backspace": "⌫",
+    "Enter": "=",
     " ": "\xa0", // replace space with non-breaking space
     "ArrowLeft": "←",
     "ArrowRight": "→",
