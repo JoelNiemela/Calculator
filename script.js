@@ -233,6 +233,7 @@ function calculate() {
   const symtable = {
     "e": 2.71828182846,
     "π": 3.14159265359,
+    "pi": 3.14159265359,
   };
   const value = evaluate(tree, symtable);
   console.log(tree);
