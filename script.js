@@ -13,6 +13,10 @@ function superscript(value) {
   return "<sup>" + value + "</sup>";
 }
 
+function sqrt(value) {
+  return '<span class="sqrt">' + value + "</span>";
+}
+
 function implicit(value) {
     return '<span class="implicit">' + value + "</span>";
 }
@@ -58,6 +62,7 @@ function calcValueString(value, pos=[]) {
 
     let valueStr = calcValueString(value.value, pos);
     if (value.type == "super") return superscript(valueStr) + caretPostfix;
+    if (value.type == "sqrt") return sqrt(valueStr) + caretPostfix;
   }
 }
 
@@ -74,6 +79,7 @@ function calcValueEquation(value) {
 
   let valueStr = calcValueEquation(value.value);
   if (value.type == "super") return "^(" + valueStr + ")"
+  if (value.type == "sqrt") return "(" + valueStr + ")"
 }
 
 function getElementOffset(element) {
@@ -313,8 +319,14 @@ function remove(arr=calcValue, pos=caretPos) {
     }
   } else {
     if (index > 0) {
-      arr.splice(index-1, 1);
       caretPos[caretPos.length-1]--;
+
+      const element = getAt(caretPos);
+      if (typeof element == "object") {
+        caretPos.push(element.value.length);
+      } else {
+        arr.splice(index-1, 1);
+      }
     }
   }
 }
@@ -342,6 +354,12 @@ function handleInput(key) {
       break;
     case 'xʸ':
       insert({type: "super", value: []});
+      caretPos.push(0);
+      break;
+    case '√':
+      insert("√");
+      moveCaretForward();
+      insert({type: "sqrt", value: []});
       caretPos.push(0);
       break;
     case '←':

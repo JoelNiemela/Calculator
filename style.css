@@ -76,6 +76,20 @@
   color: #c4c4c4;
 }
 
+.sqrt {
+  position: relative;
+}
+
+.sqrt:after {
+  content: "";
+  position: absolute;
+  background-color: black;
+  width: 100%;
+  height: 2px;
+  top: 4px;
+  left: -2px;
+}
+
 .riple {
   position: relative;
   overflow: hidden;
