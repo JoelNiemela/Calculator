@@ -67,6 +67,10 @@
   }
 }
 
+.implicit {
+  color: #c4c4c4;
+}
+
 .riple {
   position: relative;
   overflow: hidden;

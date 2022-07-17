@@ -13,6 +13,10 @@ function superscript(value) {
   return "<sup>" + value + "</sup>";
 }
 
+function implicit(value) {
+    return '<span class="implicit">' + value + "</span>";
+}
+
 function calcValueString(value, pos=[]) {
   const equals = (a, b) =>
     a.length === b.length &&
@@ -35,7 +39,9 @@ function calcValueString(value, pos=[]) {
       }
     }
 
-    return caretPrefix + value.map((e, i) => calcValueString(e, [...pos, i])).join("");
+    const str = value.map((e, i) => calcValueString(e, [...pos, i])).join("");
+    const { lpar, rpar } = balanceParens(str);
+    return implicit("(".repeat(lpar)) + caretPrefix + str + implicit(")".repeat(rpar));
   }
 
   if (typeof value == "object") {
@@ -61,7 +67,9 @@ function calcValueEquation(value) {
   }
 
   if (Array.isArray(value)) {
-    return value.map(e => calcValueEquation(e)).join("");
+    const str = value.map(e => calcValueEquation(e)).join("");
+    const { lpar, rpar } = balanceParens(str);
+    return "(".repeat(lpar) + str + ")".repeat(rpar);
   }
 
   let valueStr = calcValueEquation(value.value);
@@ -91,6 +99,31 @@ function riple(e) {
   setTimeout(function() {
     riple.remove();
   }, 2000);
+}
+
+function balanceParens(str) {
+  let lpar = 0;
+  let rpar = 0;
+  let parens = 0;
+  for (const char of str) {
+    switch (char) {
+      case '(':
+        parens++;
+        break;
+      case ')':
+        parens--;
+        break;
+    }
+
+    if (parens < 0) {
+      lpar++;
+      parens++;
+    }
+  }
+
+  rpar = Math.max(parens);
+
+  return { lpar, rpar };
 }
 
 function tokenize(str) {
@@ -202,6 +235,7 @@ function calculate() {
     "π": 3.14159265359,
   };
   const value = evaluate(tree, symtable);
+  console.log(tree);
   return value;
 }
 
