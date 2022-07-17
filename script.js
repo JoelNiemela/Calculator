@@ -129,7 +129,7 @@ function balanceParens(str) {
 function tokenize(str) {
   const rules = [
     ["num", /^[0-9]*\.?[0-9]+/],
-    ["var", /^[a-bA-BΑ-Ωα-ω]+/],
+    ["var", /^[a-zA-ZΑ-Ωα-ω]+/],
     ["lpar", /^\(/],
     ["rpar", /^\)/],
     ["exp", /^\^/],
