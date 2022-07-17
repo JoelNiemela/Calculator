@@ -157,20 +157,17 @@ function parse(tokens, prec=10) {
     '10': [],
   };
 
-  const lexp = parse(tokens, prec-1);
+  let lexp = parse(tokens, prec-1);
 
-  if (tokens.length == 0) {
-    return lexp;
-  }
-
-  const token = tokens.shift();
-  if (ops[prec].includes(token?.type)) {
+  let token = tokens.shift();
+  while (ops[prec].includes(token?.type)) {
     const rexp = parse(tokens, prec-1);
-    return { type: token.type, lexp, rexp };
-  } else {
-    tokens.unshift(token);
-    return lexp;
+    lexp = { type: token.type, lexp, rexp };
+    token = tokens.shift();
   }
+
+  if (token) tokens.unshift(token);
+  return lexp;
 }
 
 function evaluate(exp, symtable) {
