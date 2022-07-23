@@ -40,7 +40,8 @@
   float: right;
   margin-right: 8px;
   font-size: 28px;
-  font-family: "Source Code Pro", sans-serif;
+  font-family: "Noto Sans", sans-serif;
+  font-family: "Noto Sans Math", sans-serif;
 }
 
 .caret,
@@ -78,6 +79,7 @@
 
 .sqrt {
   position: relative;
+  font-size: 80%;
 }
 
 .sqrt:after {
@@ -85,9 +87,9 @@
   position: absolute;
   background-color: black;
   width: 100%;
-  height: 2px;
-  top: 4px;
-  left: -2px;
+  height: 0.1em;
+  top: 0px;
+  left: -1px;
 }
 
 .riple {
