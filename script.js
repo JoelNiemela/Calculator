@@ -362,6 +362,12 @@ function handleInput(key) {
       insert({type: "sqrt", value: []});
       caretPos.push(0);
       break;
+    case '∛':
+      insert("∛");
+      moveCaretForward();
+      insert({type: "sqrt", value: []});
+      caretPos.push(0);
+      break;
     case '←':
       moveCaretBackward();
       break;
