@@ -57,8 +57,8 @@
 
 .caret:after {
   content: "|";
-  right: -8px;
-  top: -3px;
+  right: -0.22em;
+  top: 0em;
 }
 
 .caret-under:after {
