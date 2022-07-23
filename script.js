@@ -79,7 +79,7 @@ function calcValueEquation(value) {
 
   let valueStr = calcValueEquation(value.value);
   if (value.type == "super") return "^(" + valueStr + ")"
-  if (value.type == "sqrt") return "(" + valueStr + ")"
+  if (value.type == "sqrt") return value.head + "(" + valueStr + ")"
 }
 
 function getElementOffset(element) {
@@ -143,6 +143,8 @@ function tokenize(str) {
     ["div", /^\÷/],
     ["add", /^\+/],
     ["sub", /^\-/],
+    ["sqrt", /^\√/],
+    ["cbrt", /^\∛/],
     ["err", /^./],
   ];
 
@@ -178,6 +180,12 @@ function parse(tokens, prec=10) {
       } else {
         return { type: "par", exp: exp, err: "Unclosed parenthesis" };
       }
+    } else if (token?.type == "sqrt") {
+      const exp = parse(tokens);
+      return { type: "sqrt", exp: exp };
+    } else if (token?.type == "cbrt") {
+      const exp = parse(tokens);
+      return { type: "cbrt", exp: exp };
     }
 
     return { type: "null", value: null };
@@ -215,6 +223,10 @@ function evaluate(exp, symtable) {
       return exp.value;
     case "var":
       return symtable[exp.symbol];
+    case "sqrt":
+      return Math.sqrt(evaluate(exp.exp));
+    case "cbrt":
+      return Math.cbrt(evaluate(exp.exp));
     case "null":
       return evaluate(exp.value, symtable);
     case "par":
