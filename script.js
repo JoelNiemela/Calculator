@@ -13,8 +13,8 @@ function superscript(value) {
   return "<sup>" + value + "</sup>";
 }
 
-function sqrt(value) {
-  return '<span class="sqrt">' + value + "</span>";
+function sqrt(head, value) {
+  return head + '<span class="sqrt">' + value + "</span>";
 }
 
 function implicit(value) {
@@ -62,7 +62,7 @@ function calcValueString(value, pos=[]) {
 
     let valueStr = calcValueString(value.value, pos);
     if (value.type == "super") return superscript(valueStr) + caretPostfix;
-    if (value.type == "sqrt") return sqrt(valueStr) + caretPostfix;
+    if (value.type == "sqrt") return sqrt(value.head, valueStr) + caretPostfix;
   }
 }
 
@@ -311,9 +311,18 @@ function remove(arr=calcValue, pos=caretPos) {
   const [index, ...subIndex] = pos;
 
   if (subIndex.length > 0) {
-    if (subIndex == 0 && arr[index].value.length == 0) {
-      arr.splice(index, 1);
-      caretPos.pop();
+    if (subIndex == 0) {
+      if (arr[index].value.length == 0) {
+        arr.splice(index, 1);
+        caretPos.pop();
+      } else {
+        caretPos.pop();
+
+        const element = getAt(caretPos);
+        if (typeof element == "object" && element.type == "sqrt") {
+          arr.splice(index, 1, ...element.value);
+        }
+      }
     } else {
       remove(arr[index].value, subIndex);
     }
@@ -357,15 +366,11 @@ function handleInput(key) {
       caretPos.push(0);
       break;
     case '√':
-      insert("√");
-      moveCaretForward();
-      insert({type: "sqrt", value: []});
+      insert({type: "sqrt", head: "√", value: []});
       caretPos.push(0);
       break;
     case '∛':
-      insert("∛");
-      moveCaretForward();
-      insert({type: "sqrt", value: []});
+      insert({type: "sqrt", head: "∛", value: []});
       caretPos.push(0);
       break;
     case '←':
