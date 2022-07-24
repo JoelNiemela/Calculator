@@ -364,6 +364,18 @@ function update() {
   if (pos) pos.innerHTML = caretPos.join();
 }
 
+function inputMode() {
+  const modeBtn = document.getElementById("btn-mode");
+  if (modeBtn.innerText == "ƒ()") {
+    return true;
+  } else if (modeBtn.innerText == "ƒ") {
+    return false;
+  }
+
+  console.log("Error");
+  return false;
+}
+
 function handleInput(key) {
   switch (key) {
     case 'AC':
