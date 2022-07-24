@@ -391,6 +391,14 @@ function handleInput(key) {
     case '→':
       moveCaretForward();
       break;
+    case 'ƒ':
+      const modeBtn = document.getElementById("btn-mode");
+      modeBtn.innerText = "ƒ()";
+      break;
+    case 'ƒ()':
+      const modeBtnParen = document.getElementById("btn-mode");
+      modeBtnParen.innerText = "ƒ";
+      break;
     case '=':
       calcValue = calculate().toString().split("");
       caretPos = [calcValue.length];
