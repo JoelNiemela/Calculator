@@ -150,6 +150,17 @@ function getAt(pos, value=calcValue) {
   }
 }
 
+function getArrAt(pos) {
+  const arrIndex = pos.slice();
+  const index = arrIndex.pop();
+  let arr = getAt(arrIndex);
+  if (typeof arr == "object" && !Array.isArray(arr)) {
+    arr = arr.value;
+  }
+
+  return { arr, index };
+}
+
 function moveCaretForward() {
   const element = getAt(caretPos);
 
@@ -293,6 +304,19 @@ function getHead(key) {
   }
 }
 
+function isFunction(str) {
+  switch (str) {
+    case 'sin':
+    case 'cos':
+    case 'tan':
+    case 'ln':
+    case 'log':
+      return true;
+    default:
+      return false;
+  }
+}
+
 function handleInput(key) {
   switch (key) {
     case 'AC':
@@ -343,13 +367,37 @@ function handleInput(key) {
       calcValue = calculate().toString().split("");
       caretPos = [calcValue.length];
       break;
-    case ')':
-      const arrIndex = caretPos.slice();
-      const index = arrIndex.pop();
-      let arr = getAt(arrIndex);
-      if (typeof arr == "object" && !Array.isArray(arr)) {
-        arr = arr.value;
+    case '(':
+      const arrObj = getArrAt(caretPos);
+      const fnArr = arrObj.arr;
+      const fnIndex = arrObj.index;
+
+      let fn = "";
+      let searchFnArr = fnArr.slice(0, fnIndex).reverse();
+      if (searchFnArr.some(char => {
+        if (!char.match(/[a-zA-Z]/i)) {
+          return true;
+        }
+
+        fn = char + fn;
+
+        if (isFunction(fn)) {
+          return true;
+        }
+      }) && isFunction(fn)) {
+        if (isFunction(fn)) {
+          const length = fn.length;
+          fnArr.splice(fnIndex-length, length, {type: "func", head: fn, value: [], mode: true});
+
+          moveCaretBackward(length-1);
+        }
+      } else {
+        insert('(');
+        moveCaretForward();
       }
+      break;
+    case ')':
+      const { arr, index } = getArrAt(caretPos);
 
       let begin;
       let obj;
