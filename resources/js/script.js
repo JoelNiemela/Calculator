@@ -43,7 +43,10 @@ function calcValueString(value, pos=[]) {
       }
     }
 
-    const str = value.map((e, i) => calcValueString(e, [...pos, i])).join("");
+    let str = value.map((e, i) => calcValueString(e, [...pos, i])).join("");
+    if (pos.length > 0 && str.length == 0) {
+      str = '□';
+    }
     const { lpar, rpar } = balanceParens(str);
     return implicit("(".repeat(lpar)) + caretPrefix + str + implicit(")".repeat(rpar));
   }
