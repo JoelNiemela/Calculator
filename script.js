@@ -61,8 +61,13 @@ function calcValueString(value, pos=[]) {
     pos[pos.length-1]--;
 
     let valueStr = calcValueString(value.value, pos);
-    if (value.type == "super") return superscript(valueStr) + caretPostfix;
-    if (value.type == "sqrt") return sqrt(value.head, valueStr) + caretPostfix;
+    if (value.mode) {
+      if (value.type == "super") return "^[" + caretPostfix;
+      if (value.type == "sqrt") return sqrt(value.head + "[", "") + caretPostfix;
+    } else {
+      if (value.type == "super") return superscript(valueStr) + caretPostfix;
+      if (value.type == "sqrt") return sqrt(value.head, valueStr) + caretPostfix;
+    }
   }
 }
 
@@ -78,8 +83,13 @@ function calcValueEquation(value) {
   }
 
   let valueStr = calcValueEquation(value.value);
-  if (value.type == "super") return "^(" + valueStr + ")"
-  if (value.type == "sqrt") return value.head + "(" + valueStr + ")"
+  if (value.mode) {
+    if (value.type == "super") return "^[";
+    if (value.type == "sqrt") return value.head + "[";
+  } else {
+    if (value.type == "super") return "^(" + valueStr + ")"
+    if (value.type == "sqrt") return value.head + "(" + valueStr + ")"
+  }
 }
 
 function getElementOffset(element) {
@@ -258,6 +268,10 @@ function calculate() {
 }
 
 function getAt(pos, value=calcValue) {
+  if (pos.length == 0) {
+    return value;
+  }
+
   if (typeof value == "string") {
     return value;
   }
@@ -281,10 +295,14 @@ function moveCaretForward() {
   const element = getAt(caretPos);
 
   if (element) {
-    if (typeof element == "string") {
+    if (typeof element == "object") {
+      if (element.mode) {
+        caretPos[caretPos.length-1]++;
+      } else {
+        caretPos.push(0);
+      }
+    } else if (typeof element == "string") {
       caretPos[caretPos.length-1]++;
-    } else if (typeof element == "object") {
-      caretPos.push(0);
     }
   } else if (caretPos.length > 1) {
     caretPos.pop();
@@ -292,7 +310,11 @@ function moveCaretForward() {
   }
 }
 
-function moveCaretBackward() {
+function moveCaretBackward(length=1) {
+  if (length == 0) {
+    return;
+  }
+
   if (caretPos[caretPos.length-1] > 0) {
     caretPos[caretPos.length-1]--;
 
@@ -300,13 +322,11 @@ function moveCaretBackward() {
     if (typeof element == "object") {
       caretPos.push(element.value.length);
     }
-
-    return;
-  }
-
-  if (caretPos.length > 1) {
+  } else if (caretPos.length > 1) {
     caretPos.pop();
   }
+
+  moveCaretBackward(length-1);
 }
 
 function insert(value, arr=calcValue, pos=caretPos) {
@@ -386,16 +406,50 @@ function handleInput(key) {
       remove();
       break;
     case 'xʸ':
-      insert({type: "super", value: []});
-      caretPos.push(0);
+      insert({type: "super", value: [], mode: inputMode()});
+      if (inputMode()) {
+        moveCaretForward();
+      } else {
+        caretPos.push(0);
+      }
       break;
     case '√':
-      insert({type: "sqrt", head: "√", value: []});
-      caretPos.push(0);
+      insert({type: "sqrt", head: "√", value: [], mode: inputMode()});
+      if (inputMode()) {
+        moveCaretForward();
+      } else {
+        caretPos.push(0);
+      }
       break;
     case '∛':
-      insert({type: "sqrt", head: "∛", value: []});
-      caretPos.push(0);
+      insert({type: "sqrt", head: "∛", value: [], mode: inputMode()});
+      if (inputMode()) {
+        moveCaretForward();
+      } else {
+        caretPos.push(0);
+      }
+      break;
+    case ']':
+      const arrIndex = caretPos.slice();
+      const index = arrIndex.pop();
+      let arr = getAt(arrIndex);
+      if (typeof arr == "object" && !Array.isArray(arr)) {
+        arr = arr.value;
+      }
+
+      let begin;
+      let obj;
+      let searchArr = arr.slice(0, index).reverse();
+      const last = index-1;
+      if (searchArr.some((e, i) => { obj = e; begin = last-i; return typeof e == "object" && e.mode; })) {
+        const length = index-begin;
+
+        const [_head, ...value] = arr.splice(begin, length);
+        arr.splice(begin, 0, {type: obj.type, head: obj.head, value, mode: false});
+
+        moveCaretBackward(length-1);
+      }
+
       break;
     case '←':
       moveCaretBackward();
@@ -433,7 +487,7 @@ function handleKeyPress(e) {
   const key = e.key;
   if (e.ctrlKey) return;
 
-  if (key.length == 1 && key.match(/[a-zA-Z0-9()\.:+-]/i)) {
+  if (key.length == 1 && key.match(/[a-zA-Z0-9()\]\.:+-]/i)) {
     e.preventDefault();
     handleInput(key);
   }
