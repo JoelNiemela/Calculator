@@ -318,6 +318,14 @@ function handleInput(key) {
       const modeBtnParen = document.getElementById("btn-mode");
       modeBtnParen.innerText = "ƒ";
       break;
+    case 'Rad':
+      const radBtn = document.getElementById("btn-angle");
+      radBtn.innerText = "Deg";
+      break;
+    case 'Deg':
+      const degBtn = document.getElementById("btn-angle");
+      degBtn.innerText = "Rad";
+      break;
     case '=':
       calcValue = calculate().toString().split("");
       caretPos = [calcValue.length];
