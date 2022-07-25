@@ -172,7 +172,7 @@ function moveCaretBackward(length=1) {
     caretPos[caretPos.length-1]--;
 
     const element = getAt(caretPos);
-    if (typeof element == "object") {
+    if (typeof element == "object" && !element.mode) {
       caretPos.push(element.value.length);
     }
   } else if (caretPos.length > 1) {
