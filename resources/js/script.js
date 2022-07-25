@@ -2,11 +2,11 @@ let calcValue = [];
 let caretPos = [0];
 
 function caret(value) {
-    return '<span class="caret">' + value + "</span>";
+  return '<span class="caret">' + value + "</span>";
 }
 
 function caretUnder() {
-    return '<span class="caret-under">\xa0</span>';
+  return '<span class="caret-under">\xa0</span>';
 }
 
 function superscript(value) {
@@ -18,7 +18,11 @@ function sqrt(head, value) {
 }
 
 function implicit(value) {
-    return '<span class="implicit">' + value + "</span>";
+  return '<span class="implicit">' + value + "</span>";
+}
+
+function red(value) {
+  return '<span style="color: red;">' + value + "</span>";
 }
 
 function calcValueString(value, pos=[]) {
@@ -65,11 +69,13 @@ function calcValueString(value, pos=[]) {
 
     let valueStr = calcValueString(value.value, pos);
     if (value.mode) {
-      if (value.type == "super") return "^[" + caretPostfix;
-      if (value.type == "sqrt") return sqrt(value.head + "[", "") + caretPostfix;
+      if (value.type == "super") return "^(" + caretPostfix;
+      if (value.type == "sqrt") return sqrt(value.head + "(", "") + caretPostfix;
+      if (value.type == "func") return value.head + "(" + caretPostfix;
     } else {
       if (value.type == "super") return superscript(valueStr) + caretPostfix;
       if (value.type == "sqrt") return sqrt(value.head, valueStr) + caretPostfix;
+      if (value.type == "func") return value.head + "(" + valueStr + ")" + caretPostfix;
     }
   }
 }
@@ -87,8 +93,8 @@ function calcValueEquation(value) {
 
   let valueStr = calcValueEquation(value.value);
   if (value.mode) {
-    if (value.type == "super") return "^[";
-    if (value.type == "sqrt") return value.head + "[";
+    if (value.type == "super") return "^(";
+    if (value.type == "sqrt") return value.head + "(";
   } else {
     if (value.type == "super") return "^(" + valueStr + ")"
     if (value.type == "sqrt") return value.head + "(" + valueStr + ")"
@@ -204,7 +210,7 @@ function remove(arr=calcValue, pos=caretPos) {
         caretPos.pop();
 
         const element = getAt(caretPos);
-        if (typeof element == "object" && element.type == "sqrt") {
+        if (typeof element == "object" && element.type != "super") {
           arr.splice(index, 1, ...element.value);
         }
       }
@@ -217,7 +223,18 @@ function remove(arr=calcValue, pos=caretPos) {
 
       const element = getAt(caretPos);
       if (typeof element == "object") {
-        caretPos.push(element.value.length);
+        if (element.mode) {
+            arr.splice(index-1, 1);
+        } else {
+          if (element.type == "func") {
+            caretPos[caretPos.length-1] += element.value.length + 1;
+            arr.splice(index, 0, ...element.value);
+            element.mode = true;
+            element.value = [];
+          } else {
+            caretPos.push(element.value.length);
+          }
+        }
       } else {
         arr.splice(index-1, 1);
       }
@@ -249,6 +266,33 @@ function inputMode() {
   return false;
 }
 
+function getType(key) {
+  switch (key) {
+    case 'xʸ':
+      return "super";
+    case '√':
+    case '∛':
+      return "sqrt";
+    case 'sin':
+    case 'cos':
+    case 'tan':
+    case 'ln':
+    case 'log':
+      return "func";
+    default:
+      return "null";
+  }
+}
+
+function getHead(key) {
+  switch (key) {
+    case 'xʸ':
+      return undefined;
+    default:
+      return key;
+  }
+}
+
 function handleInput(key) {
   switch (key) {
     case 'AC':
@@ -259,50 +303,19 @@ function handleInput(key) {
       remove();
       break;
     case 'xʸ':
-      insert({type: "super", value: [], mode: inputMode()});
-      if (inputMode()) {
-        moveCaretForward();
-      } else {
-        caretPos.push(0);
-      }
-      break;
     case '√':
-      insert({type: "sqrt", head: "√", value: [], mode: inputMode()});
-      if (inputMode()) {
-        moveCaretForward();
-      } else {
-        caretPos.push(0);
-      }
-      break;
     case '∛':
-      insert({type: "sqrt", head: "∛", value: [], mode: inputMode()});
+    case 'sin':
+    case 'cos':
+    case 'tan':
+    case 'ln':
+    case 'log':
+      insert({type: getType(key), head: getHead(key), value: [], mode: inputMode()});
       if (inputMode()) {
         moveCaretForward();
       } else {
         caretPos.push(0);
       }
-      break;
-    case ']':
-      const arrIndex = caretPos.slice();
-      const index = arrIndex.pop();
-      let arr = getAt(arrIndex);
-      if (typeof arr == "object" && !Array.isArray(arr)) {
-        arr = arr.value;
-      }
-
-      let begin;
-      let obj;
-      let searchArr = arr.slice(0, index).reverse();
-      const last = index-1;
-      if (searchArr.some((e, i) => { obj = e; begin = last-i; return typeof e == "object" && e.mode; })) {
-        const length = index-begin;
-
-        const [_head, ...value] = arr.splice(begin, length);
-        arr.splice(begin, 0, {type: obj.type, head: obj.head, value, mode: false});
-
-        moveCaretBackward(length-1);
-      }
-
       break;
     case '←':
       moveCaretBackward();
@@ -330,6 +343,44 @@ function handleInput(key) {
       calcValue = calculate().toString().split("");
       caretPos = [calcValue.length];
       break;
+    case ')':
+      const arrIndex = caretPos.slice();
+      const index = arrIndex.pop();
+      let arr = getAt(arrIndex);
+      if (typeof arr == "object" && !Array.isArray(arr)) {
+        arr = arr.value;
+      }
+
+      let begin;
+      let obj;
+      let searchArr = arr.slice(0, index).reverse();
+      let parens = 0;
+      const last = index-1;
+      if (searchArr.some((e, i) => {
+        obj = e;
+        begin = last-i;
+        if (e == ")") parens--;
+        if (e == "(") parens++;
+        return (typeof e == "object" && e.mode)
+            || (e == "(" && parens > 0);
+      })) {
+        if (obj == "(") {
+          insert(')');
+          moveCaretForward();
+        } else {
+          const length = index-begin;
+
+          const [_head, ...value] = arr.splice(begin, length);
+          arr.splice(begin, 0, {type: obj.type, head: obj.head, value, mode: false});
+
+          moveCaretBackward(length-1);
+        }
+      } else {
+        insert(')');
+        moveCaretForward();
+      }
+
+      break;
     default:
       insert(key);
       moveCaretForward();
@@ -348,7 +399,7 @@ function handleKeyPress(e) {
   const key = e.key;
   if (e.ctrlKey) return;
 
-  if (key.length == 1 && key.match(/[a-zA-Z0-9()\]\.:+-]/i)) {
+  if (key.length == 1 && key.match(/[a-zA-Z0-9()\.:+-]/i)) {
     e.preventDefault();
     handleInput(key);
   }
