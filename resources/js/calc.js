@@ -9,8 +9,9 @@ function tokenize(str) {
     ["div", /^\÷/],
     ["add", /^\+/],
     ["sub", /^\-/],
-    ["sqrt", /^\√/],
-    ["cbrt", /^\∛/],
+    ["var", /^\√/],
+    ["var", /^\∛/],
+    ["ws", /^\s/],
     ["err", /^./],
   ];
 
@@ -22,7 +23,7 @@ function tokenize(str) {
     for (const [type, regex] of rules) {
       if (token = str.slice(pos).match(regex)) {
         pos += token[0].length;
-        tokens.push({type, value: token[0]});
+        if (type != "ws") tokens.push({type, value: token[0]});
         break;
       }
     }
@@ -46,12 +47,6 @@ function parse(tokens, prec=10) {
       } else {
         return { type: "par", exp, err: "Unclosed parenthesis" };
       }
-    } else if (token?.type == "sqrt") {
-      const exp = parse(tokens);
-      return { type: "sqrt", exp };
-    } else if (token?.type == "cbrt") {
-      const exp = parse(tokens);
-      return { type: "cbrt", exp };
     } else if (token?.type == "sub") {
       const lexp = { type: "num", value: 0.0 };
       const rexp = parse(tokens);
@@ -83,7 +78,17 @@ function parse(tokens, prec=10) {
     token = tokens.shift();
   }
 
+  // reinsert the lookahead token if it's not undefined
   if (token) tokens.unshift(token);
+
+  if (ops[prec].includes('mul')) {
+    // while there is another token and that token is not an operator (or a closing parenthesis)
+    while (tokens.length > 0 && !Object.values(ops).flat().concat(['rpar']).includes(tokens[0]?.type)) {
+      const rexp = parse(tokens, prec-1);
+      lexp = { type: 'juxtra', lexp, rexp };
+    }
+  }
+
   return lexp;
 }
 
@@ -92,11 +97,13 @@ function evaluate(exp, symtable) {
     case "num":
       return exp.value;
     case "var":
-      return symtable[exp.symbol];
-    case "sqrt":
-      return Math.sqrt(evaluate(exp.exp, symtable));
-    case "cbrt":
-      return Math.cbrt(evaluate(exp.exp, symtable));
+      return symtable[exp.symbol].value;
+    case "juxtra":
+      if (exp.lexp.type == "var" && symtable[exp.lexp.symbol].type == "func") {
+        return symtable[exp.lexp.symbol].func(evaluate(exp.rexp, symtable));
+      } else {
+        return evaluate(exp.lexp, symtable) * evaluate(exp.rexp, symtable);
+      }
     case "null":
       return evaluate(exp.value, symtable);
     case "par":
@@ -119,9 +126,18 @@ function calculate() {
   const tokens = tokenize(str);
   const tree = parse(tokens);
   const symtable = {
-    "e": 2.71828182846,
-    "π": 3.14159265359,
-    "pi": 3.14159265359,
+    "e": { type: "number", value: 2.71828182846 },
+    "π": { type: "number", value: 3.14159265359 },
+    "pi": { type: "number", value: 3.14159265359 },
+    "cos" : { type: "func", func: Math.cos },
+    "sin" : { type: "func", func: Math.sin },
+    "tan" : { type: "func", func: Math.tan },
+    "ln" : { type: "func", func: Math.ln },
+    "log" : { type: "func", func: Math.log },
+    "√" : { type: "func", func: Math.sqrt },
+    "∛" : { type: "func", func: Math.cbrt },
+    "sqrt" : { type: "func", func: Math.sqrt },
+    "cbrt" : { type: "func", func: Math.cbrt },
   };
   const value = evaluate(tree, symtable);
   return value;

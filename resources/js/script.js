@@ -95,9 +95,11 @@ function calcValueEquation(value) {
   if (value.mode) {
     if (value.type == "super") return "^(";
     if (value.type == "sqrt") return value.head + "(";
+    if (value.type == "func") return value.head + "(";
   } else {
-    if (value.type == "super") return "^(" + valueStr + ")"
-    if (value.type == "sqrt") return value.head + "(" + valueStr + ")"
+    if (value.type == "super") return "^(" + valueStr + ")";
+    if (value.type == "sqrt") return value.head + "(" + valueStr + ")";
+    if (value.type == "func") return value.head + "(" + valueStr + ")";
   }
 }
 
@@ -374,23 +376,33 @@ function handleInput(key) {
 
       let fn = "";
       let searchFnArr = fnArr.slice(0, fnIndex).reverse();
-      if (searchFnArr.some(char => {
+      searchFnArr.some(char => {
         if (!char.match(/[a-zA-Z]/i)) {
           return true;
         }
 
         fn = char + fn;
 
-        if (isFunction(fn)) {
+        if (isFunction(fn) || fn == "sqrt" || fn == "cbrt") {
           return true;
         }
-      }) && isFunction(fn)) {
-        if (isFunction(fn)) {
-          const length = fn.length;
-          fnArr.splice(fnIndex-length, length, {type: "func", head: fn, value: [], mode: true});
+      });
 
-          moveCaretBackward(length-1);
-        }
+      if (isFunction(fn)) {
+        const length = fn.length;
+        fnArr.splice(fnIndex-length, length, {type: "func", head: fn, value: [], mode: true});
+
+        moveCaretBackward(length-1);
+      } else if (fn == "sqrt") {
+        const length = fn.length;
+        fnArr.splice(fnIndex-length, length, {type: "sqrt", head: "√", value: [], mode: true});
+
+        moveCaretBackward(length-1);
+      } else if (fn == "cbrt") {
+        const length = fn.length;
+        fnArr.splice(fnIndex-length, length, {type: "sqrt", head: "∛", value: [], mode: true});
+
+        moveCaretBackward(length-1);
       } else {
         insert('(');
         moveCaretForward();
