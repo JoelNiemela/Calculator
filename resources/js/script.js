@@ -152,15 +152,21 @@ function getAt(pos, value=calcValue) {
   }
 }
 
-function getArrAt(pos) {
+function getObjAt(pos) {
   const arrIndex = pos.slice();
   const index = arrIndex.pop();
-  let arr = getAt(arrIndex);
-  if (typeof arr == "object" && !Array.isArray(arr)) {
-    arr = arr.value;
+  let obj = getAt(arrIndex);
+
+  return { obj, index };
+}
+
+function getArrAt(pos) {
+  let { obj, index } = getObjAt(pos);
+  if (typeof obj == "object" && !Array.isArray(obj)) {
+    obj = obj.value;
   }
 
-  return { arr, index };
+  return { arr: obj, index };
 }
 
 function moveCaretForward() {
@@ -425,8 +431,12 @@ function handleInput(key) {
             || (e == "(" && parens > 0);
       })) {
         if (obj == "(") {
-          insert(')');
-          moveCaretForward();
+          if (arr[index] == ')') {
+            moveCaretForward();
+          } else {
+            insert(')');
+            moveCaretForward();
+          }
         } else {
           const length = index-begin;
 
@@ -436,8 +446,13 @@ function handleInput(key) {
           moveCaretBackward(length-1);
         }
       } else {
-        insert(')');
-        moveCaretForward();
+        const { obj, index } = getObjAt(caretPos);
+        if (typeof obj == "object" && obj.type == "func" && index == obj.value.length) {
+          moveCaretForward();
+        } else {
+          insert(')');
+          moveCaretForward();
+        }
       }
 
       break;
