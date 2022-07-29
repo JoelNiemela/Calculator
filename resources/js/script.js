@@ -474,7 +474,7 @@ function handleKeyPress(e) {
   const key = e.key;
   if (e.ctrlKey) return;
 
-  if (key.length == 1 && key.match(/[a-zA-Z0-9()\.:+-]/i)) {
+  if (key.length == 1 && key.match(/[a-zA-Z0-9()\.:!+-]/i)) {
     e.preventDefault();
     handleInput(key);
   }
