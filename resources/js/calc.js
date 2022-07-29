@@ -11,6 +11,7 @@ function tokenize(str) {
     ["sub", /^\-/],
     ["var", /^\√/],
     ["var", /^\∛/],
+    ["fac", /^!/],
     ["ws", /^\s/],
     ["err", /^./],
   ];
@@ -59,7 +60,7 @@ function parse(tokens, prec=10) {
   const ops = {
     '1': [],
     '2': [],
-    '3': [],
+    '3': ['fac'],
     '4': ['exp'],
     '5': ['mul', 'div'],
     '6': ['add', 'sub'],
@@ -73,8 +74,13 @@ function parse(tokens, prec=10) {
 
   let token = tokens.shift();
   while (ops[prec].includes(token?.type)) {
-    const rexp = parse(tokens, prec-1);
-    lexp = { type: token.type, lexp, rexp };
+    if (token?.type == 'fac') {
+      lexp = { type: token.type, exp: lexp };
+    } else {
+      const rexp = parse(tokens, prec-1);
+      lexp = { type: token.type, lexp, rexp };
+    }
+
     token = tokens.shift();
   }
 
@@ -92,12 +98,18 @@ function parse(tokens, prec=10) {
   return lexp;
 }
 
+function factorial(n){
+    return (n <= 1) ? 1 : factorial(n - 1) * n;
+}
+
 function evaluate(exp, symtable) {
   switch (exp?.type) {
     case "num":
       return exp.value;
     case "var":
       return symtable[exp.symbol].value;
+    case "fac":
+      return factorial(evaluate(exp.exp));
     case "juxtra":
       if (exp.lexp.type == "var" && symtable[exp.lexp.symbol].type == "func") {
         return symtable[exp.lexp.symbol].func(evaluate(exp.rexp, symtable));
