@@ -94,12 +94,12 @@ function calcValueEquation(value) {
   let valueStr = calcValueEquation(value.value);
   if (value.mode) {
     if (value.type == "super") return "^(";
-    if (value.type == "sqrt") return value.head + "::(";
-    if (value.type == "func") return value.head + "::(";
+    if (value.type == "sqrt") return "(" + value.head + "(";
+    if (value.type == "func") return "(" + value.head + "(";
   } else {
     if (value.type == "super") return "^(" + valueStr + ")";
-    if (value.type == "sqrt") return value.head + "::(" + valueStr + ")";
-    if (value.type == "func") return value.head + "::(" + valueStr + ")";
+    if (value.type == "sqrt") return "(" + value.head + "(" + valueStr + "))";
+    if (value.type == "func") return "(" + value.head + "(" + valueStr + "))";
   }
 }
 
