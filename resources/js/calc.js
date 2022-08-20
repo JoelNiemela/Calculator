@@ -61,7 +61,7 @@ function parse(tokens, prec=10) {
 
   const ops = {
     '1': ['apply'],
-    '2': ['decl'],
+    '2': [],
     '3': ['fac'],
     '4': ['exp'],
     '5': ['mul', 'div'],
@@ -69,7 +69,7 @@ function parse(tokens, prec=10) {
     '7': [],
     '8': [],
     '9': [],
-    '10': [],
+    '10': ['decl'],
   };
 
   let lexp = parse(tokens, prec-1);
@@ -110,6 +110,14 @@ function evaluate(exp, symtable) {
       return exp.value;
     case "var":
       return symtable[exp.symbol].value;
+    case "decl":
+      console.assert(exp.lexp.type == "var");
+      let val = evaluate(exp.rexp, symtable);
+      symtable[exp.lexp.symbol] = {
+        type: typeof val,
+        value: val,
+      };
+      return val;
     case "apply":
         console.assert(exp.lexp.type == "var" && symtable[exp.lexp.symbol].type == "func");
         return symtable[exp.lexp.symbol].func(evaluate(exp.rexp, symtable));
@@ -134,24 +142,31 @@ function evaluate(exp, symtable) {
   }
 }
 
+const symtable = {
+  "e": { type: "number", value: 2.71828182846 },
+  "π": { type: "number", value: 3.14159265359 },
+  "pi": { type: "number", value: 3.14159265359 },
+  "cos" : { type: "func", func: Math.cos },
+  "sin" : { type: "func", func: Math.sin },
+  "tan" : { type: "func", func: Math.tan },
+  "ln" : { type: "func", func: Math.ln },
+  "log" : { type: "func", func: Math.log },
+  "√" : { type: "func", func: Math.sqrt },
+  "∛" : { type: "func", func: Math.cbrt },
+  "sqrt" : { type: "func", func: Math.sqrt },
+  "cbrt" : { type: "func", func: Math.cbrt },
+};
+
 function calculate() {
   const str = calcValueEquation(calcValue);
   const tokens = tokenize(str);
   const tree = parse(tokens);
-  const symtable = {
-    "e": { type: "number", value: 2.71828182846 },
-    "π": { type: "number", value: 3.14159265359 },
-    "pi": { type: "number", value: 3.14159265359 },
-    "cos" : { type: "func", func: Math.cos },
-    "sin" : { type: "func", func: Math.sin },
-    "tan" : { type: "func", func: Math.tan },
-    "ln" : { type: "func", func: Math.ln },
-    "log" : { type: "func", func: Math.log },
-    "√" : { type: "func", func: Math.sqrt },
-    "∛" : { type: "func", func: Math.cbrt },
-    "sqrt" : { type: "func", func: Math.sqrt },
-    "cbrt" : { type: "func", func: Math.cbrt },
-  };
   const value = evaluate(tree, symtable);
+
+  // Don't return a value if the top-level exp was a decl
+  if (tree.type == "decl") {
+    return "";
+  }
+
   return value;
 }
