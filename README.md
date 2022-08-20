@@ -4,3 +4,6 @@
 <p align="center">
   <img alt="Calculator" src="docs/Calculator.png" width="50%">
 </p>
+
+## Live Example
+[JoelNiemela.github.io/Calculator](https://JoelNiemela.github.io/Calculator)
