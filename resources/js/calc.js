@@ -12,6 +12,8 @@ function tokenize(str) {
     ["var", /^\√/],
     ["var", /^\∛/],
     ["fac", /^!/],
+    ["apply", /^::/],
+    ["decl", /^:/],
     ["ws", /^\s/],
     ["err", /^./],
   ];
@@ -58,8 +60,8 @@ function parse(tokens, prec=10) {
   }
 
   const ops = {
-    '1': [],
-    '2': [],
+    '1': ['apply'],
+    '2': ['decl'],
     '3': ['fac'],
     '4': ['exp'],
     '5': ['mul', 'div'],
@@ -108,14 +110,13 @@ function evaluate(exp, symtable) {
       return exp.value;
     case "var":
       return symtable[exp.symbol].value;
+    case "apply":
+        console.assert(exp.lexp.type == "var" && symtable[exp.lexp.symbol].type == "func");
+        return symtable[exp.lexp.symbol].func(evaluate(exp.rexp, symtable));
     case "fac":
       return factorial(evaluate(exp.exp));
     case "juxtra":
-      if (exp.lexp.type == "var" && symtable[exp.lexp.symbol].type == "func") {
-        return symtable[exp.lexp.symbol].func(evaluate(exp.rexp, symtable));
-      } else {
-        return evaluate(exp.lexp, symtable) * evaluate(exp.rexp, symtable);
-      }
+      return evaluate(exp.lexp, symtable) * evaluate(exp.rexp, symtable);
     case "null":
       return evaluate(exp.value, symtable);
     case "par":
