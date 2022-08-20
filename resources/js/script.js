@@ -383,6 +383,10 @@ function handleInput(key) {
       let fn = "";
       let searchFnArr = fnArr.slice(0, fnIndex).reverse();
       searchFnArr.some(char => {
+        if (typeof char != "string") {
+          return true;
+        }
+
         if (!char.match(/[a-zA-Z]/i)) {
           return true;
         }
