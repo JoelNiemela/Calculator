@@ -297,6 +297,7 @@ function getType(key) {
     case 'tan':
     case 'ln':
     case 'log':
+    case 'log₂':
       return "func";
     default:
       return "null";
@@ -319,6 +320,7 @@ function isFunction(str) {
     case 'tan':
     case 'ln':
     case 'log':
+    case 'log₂':
       return true;
     default:
       return false;
@@ -342,6 +344,7 @@ function handleInput(key) {
     case 'tan':
     case 'ln':
     case 'log':
+    case 'log₂':
       insert({type: getType(key), head: getHead(key), value: [], mode: inputMode()});
       if (inputMode()) {
         moveCaretForward();
