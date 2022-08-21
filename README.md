@@ -19,6 +19,20 @@ x + y
 42
 ```
 
+### Lambdas
+Define and reuse your own custom lambda functions:
+```ruby
+fn : λx.x+2
+fn(5)
+7
+```
+
+Or use lambda literals directly (IIFE):
+```ruby
+(λx.x+2)(3)
+5
+```
+
 ### Unicode support
 ```ruby
 √(π)
