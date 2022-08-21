@@ -475,10 +475,19 @@ function handleButtonClick(e) {
 }
 
 function handleKeyPress(e) {
-  const key = e.key;
+  let key = e.key;
   if (e.ctrlKey) return;
 
-  if (key.length == 1 && key.match(/[a-zA-Z0-9()\.:!+-]/i)) {
+  if (e.altKey) {
+    const altMap = {
+      "l": "λ",
+      "p": "π",
+    };
+
+    key = altMap[key] ?? key;
+  }
+
+  if (key.length == 1 && key.match(/[a-zA-Z0-9()\.:!+-λπ]/i)) {
     e.preventDefault();
     handleInput(key);
   }

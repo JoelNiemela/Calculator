@@ -1,6 +1,7 @@
 function tokenize(str) {
   const rules = [
     ["num", /^[0-9]*\.?[0-9]+/],
+    ["lambda", /^λ/],
     ["var", /^[a-zA-ZΑ-Ωα-ω]+/],
     ["lpar", /^\(/],
     ["rpar", /^\)/],
@@ -13,6 +14,7 @@ function tokenize(str) {
     ["var", /^\∛/],
     ["fac", /^!/],
     ["decl", /^:/],
+    ["dot", /^\./],
     ["ws", /^\s/],
     ["err", /^./],
   ];
@@ -53,6 +55,21 @@ function parse(tokens, prec=10) {
       const lexp = { type: "num", value: 0.0 };
       const rexp = parse(tokens);
       return { type: "sub", lexp, rexp };
+    } else if (token?.type == "lambda") {
+      let token = tokens.shift();
+      const vars = [];
+      while (token?.type == "var") {
+        vars.push({ type: "var", symbol: token.value });
+
+        token = tokens.shift();
+      }
+
+      if (token?.type != "dot") {
+        return { type: "lambda", vars, exp: { type: "null", value: null }, err: "Expected '.' (dot), found '" + token?.value + "' (" + token?.type + ")" };
+      } else {
+        const exp = parse(tokens);
+        return { type: "lambda", vars, exp };
+      }
     }
 
     return { type: "null", value: null };
@@ -108,20 +125,46 @@ function evaluate(exp, symtable) {
     case "num":
       return exp.value;
     case "var":
-      return symtable[exp.symbol].value;
+      return symtable.lookup(exp.symbol)?.value;
     case "decl":
       console.assert(exp.lexp.type == "var");
       let val = evaluate(exp.rexp, symtable);
-      symtable[exp.lexp.symbol] = {
-        type: typeof val,
+
+      let type = typeof val;
+      if (type == "object" && val.type == "lambda") {
+        type = "lambda";
+      }
+
+      symtable.set(exp.lexp.symbol, {
+        type: type,
         value: val,
-      };
+      });
+
       return val;
+    case "lambda":
+      return exp;
     case "fac":
       return factorial(evaluate(exp.exp));
     case "juxtra":
-      if (exp.lexp.type == "var" && symtable[exp.lexp.symbol].type == "func") {
-        return symtable[exp.lexp.symbol].func(evaluate(exp.rexp, symtable));
+      if (exp.lexp.type == "var" && symtable.lookup(exp.lexp.symbol)?.type == "func") {
+        return symtable.lookup(exp.lexp.symbol).func(evaluate(exp.rexp, symtable));
+      } else if (exp.lexp.type == "var" && symtable.lookup(exp.lexp.symbol)?.type == "lambda") {
+        let lambda = symtable.lookup(exp.lexp.symbol).value;
+
+        let args = {};
+        let arg = evaluate(exp.rexp, symtable);
+
+        let type = typeof arg;
+        if (type == "object" && arg.type == "lambda") {
+          type = "lambda";
+        }
+
+        args[lambda.vars[0].symbol] = {
+          type: type,
+          value: arg
+        };
+
+        return evaluate(lambda.exp, new Symtable(symtable, args));
       } else {
         return evaluate(exp.lexp, symtable) * evaluate(exp.rexp, symtable);
       }
@@ -139,10 +182,12 @@ function evaluate(exp, symtable) {
       return evaluate(exp.lexp, symtable) + evaluate(exp.rexp, symtable);
     case "sub":
       return evaluate(exp.lexp, symtable) - evaluate(exp.rexp, symtable);
+    default:
+      console.error("Error: unknown exp type '" + exp?.type + "'");
   }
 }
 
-const symtable = {
+const global_symtable = new Symtable(null, {
   "e": { type: "number", value: 2.71828182846 },
   "π": { type: "number", value: 3.14159265359 },
   "pi": { type: "number", value: 3.14159265359 },
@@ -155,13 +200,13 @@ const symtable = {
   "∛" : { type: "func", func: Math.cbrt },
   "sqrt" : { type: "func", func: Math.sqrt },
   "cbrt" : { type: "func", func: Math.cbrt },
-};
+});
 
 function calculate() {
   const str = calcValueEquation(calcValue);
   const tokens = tokenize(str);
   const tree = parse(tokens);
-  const value = evaluate(tree, symtable);
+  const value = evaluate(tree, global_symtable);
 
   // Don't return a value if the top-level exp was a decl
   if (tree.type == "decl") {
