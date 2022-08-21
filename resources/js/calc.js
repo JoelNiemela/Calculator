@@ -14,6 +14,7 @@ function tokenize(str) {
     ["var", /^\∛/],
     ["fac", /^!/],
     ["decl", /^:/],
+    ["end", /^;/],
     ["dot", /^\./],
     ["ws", /^\s/],
     ["err", /^./],
@@ -62,6 +63,10 @@ function parse(tokens, prec=10) {
         vars.push({ type: "var", symbol: token.value });
 
         token = tokens.shift();
+      }
+
+      if (token?.type == "end") {
+        return { type: "var", symmbol: vars[0] };
       }
 
       if (token?.type != "dot") {
@@ -123,51 +128,35 @@ function factorial(n){
 function evaluate(exp, symtable) {
   switch (exp?.type) {
     case "num":
-      return exp.value;
+      return new Value("num", exp.value);
     case "var":
-      return symtable.lookup(exp.symbol)?.value;
+      return symtable.lookup(exp.symbol);
     case "decl":
       console.assert(exp.lexp.type == "var");
-      let val = evaluate(exp.rexp, symtable);
-
-      let type = typeof val;
-      if (type == "object" && val.type == "lambda") {
-        type = "lambda";
-      }
-
-      symtable.set(exp.lexp.symbol, {
-        type: type,
-        value: val,
-      });
+  
+      const val = evaluate(exp.rexp, symtable)
+      symtable.set(exp.lexp.symbol, val);
 
       return val;
     case "lambda":
-      return exp;
+      return new Value("lambda", exp);
     case "fac":
       return factorial(evaluate(exp.exp));
     case "juxtra":
       if (exp.lexp.type == "var" && symtable.lookup(exp.lexp.symbol)?.type == "func") {
-        return symtable.lookup(exp.lexp.symbol).func(evaluate(exp.rexp, symtable));
+        return symtable.lookup(exp.lexp.symbol).value(evaluate(exp.rexp, symtable));
       } else {
-        const lexp = evaluate(exp.lexp, symtable);
-        if (lexp.type == "lambda") {
-          const lambda = lexp;
+        const lval = evaluate(exp.lexp, symtable);
+        if (lval.type == "lambda") {
+          const lambda = lval.value;
           let args = {};
           let arg = evaluate(exp.rexp, symtable);
 
-          let type = typeof arg;
-          if (type == "object" && arg.type == "lambda") {
-            type = "lambda";
-          }
-
-          args[lambda.vars[0].symbol] = {
-            type: type,
-            value: arg
-          };
+          args[lambda.vars[0].symbol] = arg;
 
           return evaluate(lambda.exp, new Symtable(symtable, args));
         } else {
-          return lexp * evaluate(exp.rexp, symtable);
+          return Value.mul(lval, evaluate(exp.rexp, symtable));
         }
       }
     case "null":
@@ -175,33 +164,34 @@ function evaluate(exp, symtable) {
     case "par":
       return evaluate(exp.exp, symtable);
     case "exp":
-      return evaluate(exp.lexp, symtable) ** evaluate(exp.rexp, symtable);
+      return Value.exp(evaluate(exp.lexp, symtable), evaluate(exp.rexp, symtable));
     case "mul":
-      return evaluate(exp.lexp, symtable) * evaluate(exp.rexp, symtable);
+      return Value.mul(evaluate(exp.lexp, symtable), evaluate(exp.rexp, symtable));
     case "div":
-      return evaluate(exp.lexp, symtable) / evaluate(exp.rexp, symtable);
+      return Value.div(evaluate(exp.lexp, symtable), evaluate(exp.rexp, symtable));
     case "add":
-      return evaluate(exp.lexp, symtable) + evaluate(exp.rexp, symtable);
+      return Value.add(evaluate(exp.lexp, symtable), evaluate(exp.rexp, symtable));
     case "sub":
-      return evaluate(exp.lexp, symtable) - evaluate(exp.rexp, symtable);
+      return Value.sub(evaluate(exp.lexp, symtable), evaluate(exp.rexp, symtable));
     default:
       console.error("Error: unknown exp type '" + exp?.type + "'");
   }
 }
 
 const global_symtable = new Symtable(null, {
-  "e": { type: "number", value: 2.71828182846 },
-  "π": { type: "number", value: 3.14159265359 },
-  "pi": { type: "number", value: 3.14159265359 },
-  "cos" : { type: "func", func: Math.cos },
-  "sin" : { type: "func", func: Math.sin },
-  "tan" : { type: "func", func: Math.tan },
-  "ln" : { type: "func", func: Math.ln },
-  "log" : { type: "func", func: Math.log },
-  "√" : { type: "func", func: Math.sqrt },
-  "∛" : { type: "func", func: Math.cbrt },
-  "sqrt" : { type: "func", func: Math.sqrt },
-  "cbrt" : { type: "func", func: Math.cbrt },
+  "e": new Value("num", 2.71828182846),
+  "π": new Value("num", 3.14159265359),
+  "pi": new Value("num", 3.14159265359),
+  "cos" : new Value("func", Value.cos),
+  "sin" : new Value("func", Value.sin),
+  "tan" : new Value("func", Value.tan),
+  "ln" : new Value("func", Value.ln),
+  "log" : new Value("func", Value.log),
+  "log2" : new Value("func", Value.log2),
+  "√" : new Value("func", Value.sqrt),
+  "∛" : new Value("func", Value.cbrt),
+  "sqrt" : new Value("func", Value.sqrt),
+  "cbrt" : new Value("func", Value.cbrt),
 });
 
 function calculate() {
@@ -215,5 +205,5 @@ function calculate() {
     return "";
   }
 
-  return value;
+  return value.toString();
 }
