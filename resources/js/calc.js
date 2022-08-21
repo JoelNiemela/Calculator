@@ -125,7 +125,7 @@ function evaluate(exp, symtable) {
     case "num":
       return exp.value;
     case "var":
-      return symtable[exp.symbol].value;
+      return symtable.lookup(exp.symbol)?.value;
     case "decl":
       console.assert(exp.lexp.type == "var");
       let val = evaluate(exp.rexp, symtable);
@@ -135,20 +135,20 @@ function evaluate(exp, symtable) {
         type = "lambda";
       }
 
-      symtable[exp.lexp.symbol] = {
+      symtable.set(exp.lexp.symbol, {
         type: type,
         value: val,
-      };
+      });
       return val;
     case "lambda":
       return exp;
     case "fac":
       return factorial(evaluate(exp.exp));
     case "juxtra":
-      if (exp.lexp.type == "var" && symtable[exp.lexp.symbol].type == "func") {
-        return symtable[exp.lexp.symbol].func(evaluate(exp.rexp, symtable));
-      } else if (exp.lexp.type == "var" && symtable[exp.lexp.symbol].type == "lambda") {
-        return evaluate(symtable[exp.lexp.symbol].value.exp, symtable);
+      if (exp.lexp.type == "var" && symtable.lookup(exp.lexp.symbol)?.type == "func") {
+        return symtable.lookup(exp.lexp.symbol).func(evaluate(exp.rexp, symtable));
+      } else if (exp.lexp.type == "var" && symtable.lookup(exp.lexp.symbol)?.type == "lambda") {
+        return evaluate(symtable(exp.lexp.symbol).value.exp, symtable);
       } else {
         return evaluate(exp.lexp, symtable) * evaluate(exp.rexp, symtable);
       }
@@ -169,7 +169,39 @@ function evaluate(exp, symtable) {
   }
 }
 
-const symtable = {
+class Symtable {
+  constructor(from = {}) {
+    if (from instanceof Symtable) {
+      this.lookuptable = {};
+      this.parent = from;
+    } else {
+      this.lookuptable = from;
+      this.parent = null;
+    }
+  }
+
+  lookup(symbol) {
+    if (this.lookuptable[symbol]) {
+      return this.lookuptable[symbol];
+    } else if (this.parent) {
+      return this.parent.lookup(symbol);
+    } else {
+      return undefined;
+    }
+  }
+
+  set(symbol, value) {
+    if (this.lookuptable[symbol]) {
+      return this.lookuptable[symbol] = value;
+    } else if (this.parent && this.parent.lookup(symbol)) {
+      return this.parent.set(symbol, value);
+    } else {
+      return this.lookuptable[symbol] = value;
+    }
+  }
+}
+
+const global_symtable = new Symtable({
   "e": { type: "number", value: 2.71828182846 },
   "π": { type: "number", value: 3.14159265359 },
   "pi": { type: "number", value: 3.14159265359 },
@@ -182,13 +214,13 @@ const symtable = {
   "∛" : { type: "func", func: Math.cbrt },
   "sqrt" : { type: "func", func: Math.sqrt },
   "cbrt" : { type: "func", func: Math.cbrt },
-};
+});
 
 function calculate() {
   const str = calcValueEquation(calcValue);
   const tokens = tokenize(str);
   const tree = parse(tokens);
-  const value = evaluate(tree, symtable);
+  const value = evaluate(tree, global_symtable);
 
   // Don't return a value if the top-level exp was a decl
   if (tree.type == "decl") {
