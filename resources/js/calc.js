@@ -148,25 +148,27 @@ function evaluate(exp, symtable) {
     case "juxtra":
       if (exp.lexp.type == "var" && symtable.lookup(exp.lexp.symbol)?.type == "func") {
         return symtable.lookup(exp.lexp.symbol).func(evaluate(exp.rexp, symtable));
-      } else if (exp.lexp.type == "var" && symtable.lookup(exp.lexp.symbol)?.type == "lambda") {
-        let lambda = symtable.lookup(exp.lexp.symbol).value;
-
-        let args = {};
-        let arg = evaluate(exp.rexp, symtable);
-
-        let type = typeof arg;
-        if (type == "object" && arg.type == "lambda") {
-          type = "lambda";
-        }
-
-        args[lambda.vars[0].symbol] = {
-          type: type,
-          value: arg
-        };
-
-        return evaluate(lambda.exp, new Symtable(symtable, args));
       } else {
-        return evaluate(exp.lexp, symtable) * evaluate(exp.rexp, symtable);
+        const lexp = evaluate(exp.lexp, symtable);
+        if (lexp.type == "lambda") {
+          const lambda = lexp;
+          let args = {};
+          let arg = evaluate(exp.rexp, symtable);
+
+          let type = typeof arg;
+          if (type == "object" && arg.type == "lambda") {
+            type = "lambda";
+          }
+
+          args[lambda.vars[0].symbol] = {
+            type: type,
+            value: arg
+          };
+
+          return evaluate(lambda.exp, new Symtable(symtable, args));
+        } else {
+          return lexp * evaluate(exp.rexp, symtable);
+        }
       }
     case "null":
       return evaluate(exp.value, symtable);
