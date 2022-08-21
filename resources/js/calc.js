@@ -2,7 +2,7 @@ function tokenize(str) {
   const rules = [
     ["num", /^[0-9]*\.?[0-9]+/],
     ["lambda", /^λ/],
-    ["var", /^[a-zA-ZΑ-Ωα-ω]+/],
+    ["var", /^[a-zA-ZΑ-Ωα-ω]+[₀₁₂₃₄₅₆₇₈₉]*/],
     ["lpar", /^\(/],
     ["rpar", /^\)/],
     ["exp", /^\^/],
@@ -187,6 +187,7 @@ const global_symtable = new Symtable(null, {
   "tan" : new Value("func", Value.tan),
   "ln" : new Value("func", Value.ln),
   "log" : new Value("func", Value.log),
+  "log₂" : new Value("func", Value.log2),
   "log2" : new Value("func", Value.log2),
   "√" : new Value("func", Value.sqrt),
   "∛" : new Value("func", Value.cbrt),
