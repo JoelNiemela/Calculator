@@ -166,6 +166,8 @@ function evaluate(exp, symtable) {
       return evaluate(exp.lexp, symtable) + evaluate(exp.rexp, symtable);
     case "sub":
       return evaluate(exp.lexp, symtable) - evaluate(exp.rexp, symtable);
+    default:
+      console.error("Error: unknown exp type '" + exp?.type + "'");
   }
 }
 
