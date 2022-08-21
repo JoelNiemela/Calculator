@@ -1,12 +1,7 @@
 class Symtable {
-  constructor(from = {}) {
-    if (from instanceof Symtable) {
-      this.lookuptable = {};
-      this.parent = from;
-    } else {
-      this.lookuptable = from;
-      this.parent = null;
-    }
+  constructor(from = null, lookuptable = {}) {
+    this.lookuptable = lookuptable;
+    this.parent = from;
   }
 
   lookup(symbol) {

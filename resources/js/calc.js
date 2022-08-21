@@ -59,7 +59,7 @@ function parse(tokens, prec=10) {
       let token = tokens.shift();
       const vars = [];
       while (token?.type == "var") {
-        vars.push(token);
+        vars.push({ type: "var", symbol: token.value });
 
         token = tokens.shift();
       }
@@ -129,8 +129,8 @@ function evaluate(exp, symtable) {
     case "decl":
       console.assert(exp.lexp.type == "var");
       let val = evaluate(exp.rexp, symtable);
-      let type = typeof val;
 
+      let type = typeof val;
       if (type == "object" && val.type == "lambda") {
         type = "lambda";
       }
@@ -139,6 +139,7 @@ function evaluate(exp, symtable) {
         type: type,
         value: val,
       });
+
       return val;
     case "lambda":
       return exp;
@@ -148,7 +149,22 @@ function evaluate(exp, symtable) {
       if (exp.lexp.type == "var" && symtable.lookup(exp.lexp.symbol)?.type == "func") {
         return symtable.lookup(exp.lexp.symbol).func(evaluate(exp.rexp, symtable));
       } else if (exp.lexp.type == "var" && symtable.lookup(exp.lexp.symbol)?.type == "lambda") {
-        return evaluate(symtable(exp.lexp.symbol).value.exp, symtable);
+        let lambda = symtable.lookup(exp.lexp.symbol).value;
+
+        let args = {};
+        let arg = evaluate(exp.rexp, symtable);
+
+        let type = typeof arg;
+        if (type == "object" && arg.type == "lambda") {
+          type = "lambda";
+        }
+
+        args[lambda.vars[0].symbol] = {
+          type: type,
+          value: arg
+        };
+
+        return evaluate(lambda.exp, new Symtable(symtable, args));
       } else {
         return evaluate(exp.lexp, symtable) * evaluate(exp.rexp, symtable);
       }
@@ -171,7 +187,7 @@ function evaluate(exp, symtable) {
   }
 }
 
-const global_symtable = new Symtable({
+const global_symtable = new Symtable(null, {
   "e": { type: "number", value: 2.71828182846 },
   "π": { type: "number", value: 3.14159265359 },
   "pi": { type: "number", value: 3.14159265359 },
