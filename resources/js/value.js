@@ -6,7 +6,7 @@ class Value {
 
   toString() {
     if (this.type == "lambda") {
-      return "λ" + this.value.vars.map(val => val.symbol).join(" ") + "." + "()";
+      return "λ" + this.value.vars.map(val => val.symbol).join(" ") + "." + stringifyExp(this.value.exp);
     } else {
       return this.value;
     }
