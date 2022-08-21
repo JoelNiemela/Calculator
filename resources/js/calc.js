@@ -1,6 +1,7 @@
 function tokenize(str) {
   const rules = [
     ["num", /^[0-9]*\.?[0-9]+/],
+    ["lambda", /^λ/],
     ["var", /^[a-zA-ZΑ-Ωα-ω]+/],
     ["lpar", /^\(/],
     ["rpar", /^\)/],
@@ -13,6 +14,7 @@ function tokenize(str) {
     ["var", /^\∛/],
     ["fac", /^!/],
     ["decl", /^:/],
+    ["dot", /^\./],
     ["ws", /^\s/],
     ["err", /^./],
   ];
@@ -53,6 +55,21 @@ function parse(tokens, prec=10) {
       const lexp = { type: "num", value: 0.0 };
       const rexp = parse(tokens);
       return { type: "sub", lexp, rexp };
+    } else if (token?.type == "lambda") {
+      let token = tokens.shift();
+      const vars = [];
+      while (token?.type == "var") {
+        vars.push(token);
+
+        token = tokens.shift();
+      }
+
+      if (token?.type != "dot") {
+        return { type: "lambda", vars, exp: { type: "null", value: null }, err: "Expected '.' (dot), found '" + token?.value + "' (" + token?.type + ")" };
+      } else {
+        const exp = parse(tokens);
+        return { type: "lambda", vars, exp };
+      }
     }
 
     return { type: "null", value: null };
@@ -112,16 +129,26 @@ function evaluate(exp, symtable) {
     case "decl":
       console.assert(exp.lexp.type == "var");
       let val = evaluate(exp.rexp, symtable);
+      let type = typeof val;
+
+      if (type == "object" && val.type == "lambda") {
+        type = "lambda";
+      }
+
       symtable[exp.lexp.symbol] = {
-        type: typeof val,
+        type: type,
         value: val,
       };
       return val;
+    case "lambda":
+      return exp;
     case "fac":
       return factorial(evaluate(exp.exp));
     case "juxtra":
       if (exp.lexp.type == "var" && symtable[exp.lexp.symbol].type == "func") {
         return symtable[exp.lexp.symbol].func(evaluate(exp.rexp, symtable));
+      } else if (exp.lexp.type == "var" && symtable[exp.lexp.symbol].type == "lambda") {
+        return evaluate(symtable[exp.lexp.symbol].value.exp, symtable);
       } else {
         return evaluate(exp.lexp, symtable) * evaluate(exp.rexp, symtable);
       }
