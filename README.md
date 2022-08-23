@@ -69,3 +69,8 @@ x × y
 x ÷ y
 x ^ y
 ```
+
+### Factorial function syntax
+```ruby
+x!
+```
