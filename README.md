@@ -60,3 +60,12 @@ cbrt
 √ : sqrt
 ∛ : cbrt
 ```
+
+### Operators
+```ruby
+x + y
+x - y
+x × y
+x ÷ y
+x ^ y
+```
