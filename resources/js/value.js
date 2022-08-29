@@ -52,9 +52,21 @@ class Value {
     return new Value("null", null);
   }
 
+  static rad(val) {
+    const angleBtn = document.getElementById("btn-angle")
+    if (angleBtn.innerHTML == 'Rad') {
+      return val;
+    } else if (angleBtn.innerHTML == 'Deg') {
+      return val * Math.PI/180.0;
+    } else {
+      console.error("Unknown angle type " + angleBtn.innerHTML);
+      return val;
+    }
+  }
+
   static cos(val) {
     if (val.type == "num") {
-      return new Value("num", Math.cos(val.value));
+      return new Value("num", Math.cos(Value.rad(val.value)));
     }
 
     return new Value("null", null);
@@ -62,7 +74,7 @@ class Value {
 
   static sin(val) {
     if (val.type == "num") {
-      return new Value("num", Math.sin(val.value));
+      return new Value("num", Math.sin(Value.rad(val.value)));
     }
 
     return new Value("null", null);
@@ -70,7 +82,7 @@ class Value {
 
   static tan(val) {
     if (val.type == "num") {
-      return new Value("num", Math.tan(val.value));
+      return new Value("num", Math.tan(Value.rad(val.value)));
     }
 
     return new Value("null", null);
