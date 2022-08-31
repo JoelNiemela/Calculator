@@ -12,6 +12,7 @@ function tokenize(str) {
     ["sub", /^\-/],
     ["var", /^\√/],
     ["var", /^\∛/],
+    ["var", /^°/],
     ["fac", /^!/],
     ["decl", /^:/],
     ["end", /^;/],
@@ -182,6 +183,7 @@ const global_symtable = new Symtable(null, {
   "e": new Value("num", 2.71828182846),
   "π": new Value("num", 3.14159265359),
   "pi": new Value("num", 3.14159265359),
+  "°": new Value("num", 1, "deg"),
   "cos" : new Value("func", Value.cos),
   "sin" : new Value("func", Value.sin),
   "tan" : new Value("func", Value.tan),
@@ -206,5 +208,5 @@ function calculate() {
     return "";
   }
 
-  return value.toString();
+  return value?.toString() ?? 'E';
 }

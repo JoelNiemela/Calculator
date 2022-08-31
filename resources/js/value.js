@@ -1,12 +1,21 @@
 class Value {
-  constructor(type, value) {
+  constructor(type, value, unit = "unit") {
     this.type = type;
     this.value = value;
+    this.unit = unit;
   }
 
   toString() {
     if (this.type == "lambda") {
       return "λ" + this.value.vars.map(val => val.symbol).join(" ") + "." + stringifyExp(this.value.exp);
+    } else if (this.type == "num") {
+      switch (this.unit) {
+        case "unit": return this.value;
+        case "deg": return this.value + "°";
+        default:
+          console.error("Unknown unit " + this.unit);
+          return this.value;
+        }
     } else {
       return this.value;
     }
@@ -22,7 +31,15 @@ class Value {
 
   static mul(lval, rval) {
     if (lval.type == "num" && rval.type == "num") {
-      return new Value("num", lval.value * rval.value);
+      if (lval.unit == "unit" && rval.unit == "unit") {
+        return new Value("num", lval.value * rval.value);
+      } else if (lval.unit != "unit" && rval.unit == "unit") {
+        return new Value("num", lval.value * rval.value, lval.unit);
+      } else if (lval.unit == "unit" && rval.unit != "unit") {
+        return new Value("num", lval.value * rval.value, rval.unit);
+      } else {
+        return new Value("null", null);
+      }
     }
 
     return new Value("null", null);
@@ -30,7 +47,13 @@ class Value {
 
   static div(lval, rval) {
     if (lval.type == "num" && rval.type == "num") {
-      return new Value("num", lval.value / rval.value);
+      if (lval.unit == "unit" && rval.unit == "unit") {
+        return new Value("num", lval.value / rval.value);
+      } else if (lval.unit != "unit" && rval.unit == "unit") {
+        return new Value("num", lval.value / rval.value, lval.unit);
+      } else {
+        return new Value("null", null);
+      }
     }
 
     return new Value("null", null);
@@ -38,7 +61,11 @@ class Value {
 
   static add(lval, rval) {
     if (lval.type == "num" && rval.type == "num") {
-      return new Value("num", lval.value + rval.value);
+      if (lval.unit == rval.unit) {
+        return new Value("num", lval.value + rval.value, lval.unit);
+      } else {
+        return new Value("null", null);
+      }
     }
 
     return new Value("null", null);
@@ -46,7 +73,11 @@ class Value {
 
   static sub(lval, rval) {
     if (lval.type == "num" && rval.type == "num") {
-      return new Value("num", lval.value - rval.value);
+      if (lval.unit == rval.unit) {
+        return new Value("num", lval.value - rval.value, lval.unit);
+      } else {
+        return new Value("null", null);
+      }
     }
 
     return new Value("null", null);
