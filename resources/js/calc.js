@@ -83,9 +83,9 @@ function parse(tokens, prec=10) {
 
   const ops = {
     '1': [],
-    '2': [],
-    '3': ['fac'],
-    '4': ['exp'],
+    '2': ['fac'],
+    '3': ['exp'],
+    '4': ['juxtra'],
     '5': ['mul', 'div'],
     '6': ['add', 'sub'],
     '7': [],
@@ -111,7 +111,7 @@ function parse(tokens, prec=10) {
   // reinsert the lookahead token if it's not undefined
   if (token) tokens.unshift(token);
 
-  if (ops[prec].includes('mul')) {
+  if (ops[prec].includes('juxtra')) {
     // while there is another token and that token is not an operator (or a closing parenthesis)
     while (tokens.length > 0 && !Object.values(ops).flat().concat(['rpar']).includes(tokens[0]?.type)) {
       const rexp = parse(tokens, prec-1);
