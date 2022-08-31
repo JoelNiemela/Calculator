@@ -23,7 +23,13 @@ class Value {
 
   static exp(lval, rval) {
     if (lval.type == "num" && rval.type == "num") {
-      return new Value("num", lval.value ** rval.value);
+      if (lval.unit == "unit" && rval.unit == "unit") {
+        return new Value("num", lval.value ** rval.value);
+      } else if (lval.unit != "unit" && rval.unit == "unit") {
+        return new Value("num", lval.value ** rval.value, lval.unit);
+      } else {
+        return new Value("null", null);
+      }
     }
 
     return new Value("null", null);
@@ -97,7 +103,13 @@ class Value {
 
   static cos(val) {
     if (val.type == "num") {
-      return new Value("num", Math.cos(Value.rad(val.value)));
+      if (val.unit == "unit") {
+        return new Value("num", Math.cos(Value.rad(val.value)));
+      } else if (val.unit == "deg") {
+        return new Value("num", Math.cos(val.value * Math.PI/180.0));
+      } else {
+        return new Value("null", null);
+      }
     }
 
     return new Value("null", null);
@@ -105,7 +117,13 @@ class Value {
 
   static sin(val) {
     if (val.type == "num") {
-      return new Value("num", Math.sin(Value.rad(val.value)));
+      if (val.unit == "unit") {
+        return new Value("num", Math.sin(Value.rad(val.value)));
+      } else if (val.unit == "deg") {
+        return new Value("num", Math.sin(val.value * Math.PI/180.0));
+      } else {
+        return new Value("null", null);
+      }
     }
 
     return new Value("null", null);
@@ -113,14 +131,20 @@ class Value {
 
   static tan(val) {
     if (val.type == "num") {
-      return new Value("num", Math.tan(Value.rad(val.value)));
+      if (val.unit == "unit") {
+        return new Value("num", Math.tan(Value.rad(val.value)));
+      } else if (val.unit == "deg") {
+        return new Value("num", Math.tan(val.value * Math.PI/180.0));
+      } else {
+        return new Value("null", null);
+      }
     }
 
     return new Value("null", null);
   }
 
   static ln(val) {
-    if (val.type == "num") {
+    if (val.type == "num" && val.unit == "unit") {
       return new Value("num", Math.log(val.value));
     }
 
@@ -128,7 +152,7 @@ class Value {
   }
 
   static log(val) {
-    if (val.type == "num") {
+    if (val.type == "num" && val.unit == "unit") {
       return new Value("num", Math.log10(val.value));
     }
 
@@ -136,7 +160,7 @@ class Value {
   }
 
   static log2(val) {
-    if (val.type == "num") {
+    if (val.type == "num" && val.unit == "unit") {
       return new Value("num", Math.log2(val.value));
     }
 
@@ -144,7 +168,7 @@ class Value {
   }
 
   static sqrt(val) {
-    if (val.type == "num") {
+    if (val.type == "num" && val.unit == "unit") {
       return new Value("num", Math.sqrt(val.value));
     }
 
@@ -152,7 +176,7 @@ class Value {
   }
 
   static cbrt(val) {
-    if (val.type == "num") {
+    if (val.type == "num" && val.unit == "unit") {
       return new Value("num", Math.cbrt(val.value));
     }
 

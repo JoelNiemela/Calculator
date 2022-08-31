@@ -122,7 +122,7 @@ function parse(tokens, prec=10) {
   return lexp;
 }
 
-function factorial(n){
+function factorial(n) {
     return (n <= 1) ? 1 : factorial(n - 1) * n;
 }
 
