@@ -485,12 +485,15 @@ function handleKeyPress(e) {
     const altMap = {
       "l": "λ",
       "p": "π",
+      "o": "°",
+      "r": "√",
+      "c": "∛",
     };
 
     key = altMap[key] ?? key;
   }
 
-  if (key.length == 1 && key.match(/[a-zA-Z0-9()\.:!\+\-λπ]/i)) {
+  if (key.length == 1 && key.match(/[a-zA-Z0-9()\.:!\+\-λπ°√∛]/i)) {
     e.preventDefault();
     handleInput(key);
   }
